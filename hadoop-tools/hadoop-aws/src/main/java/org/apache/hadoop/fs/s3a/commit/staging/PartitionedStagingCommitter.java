@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.hadoop.mapreduce.JobContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,6 +72,12 @@ public class PartitionedStagingCommitter extends StagingCommitter {
   public PartitionedStagingCommitter(Path outputPath,
       TaskAttemptContext context)
       throws IOException {
+    super(outputPath, context);
+  }
+
+  public PartitionedStagingCommitter(Path outputPath,
+                                     JobContext context)
+          throws IOException {
     super(outputPath, context);
   }
 
