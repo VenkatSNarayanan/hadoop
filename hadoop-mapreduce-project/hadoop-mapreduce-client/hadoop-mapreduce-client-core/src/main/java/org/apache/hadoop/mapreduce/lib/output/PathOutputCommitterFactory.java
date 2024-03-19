@@ -20,6 +20,7 @@ package org.apache.hadoop.mapreduce.lib.output;
 
 import java.io.IOException;
 
+import org.apache.hadoop.mapreduce.JobContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,6 +119,19 @@ public class PathOutputCommitterFactory extends Configured {
   }
 
   /**
+   * Create an output committer for a job.
+   * @param outputPath output path. This may be null.
+   * @param context context
+   * @return a new committer
+   * @throws IOException problems instantiating the committer
+   */
+  public PathOutputCommitter createOutputCommitter(
+      Path outputPath,
+      JobContext context) throws IOException {
+    return createFileOutputCommitter(outputPath, context);
+  }
+
+  /**
    * Create an instance of the default committer, a {@link FileOutputCommitter}
    * for a task.
    * @param outputPath the task's output path, or or null if no output path
@@ -131,6 +145,14 @@ public class PathOutputCommitterFactory extends Configured {
       TaskAttemptContext context) throws IOException {
     LOG.debug("Creating FileOutputCommitter for path {} and context {}",
         outputPath, context);
+    return new FileOutputCommitter(outputPath, context);
+  }
+
+  protected final PathOutputCommitter createFileOutputCommitter(
+          Path outputPath,
+          JobContext context) throws IOException {
+    LOG.debug("Creating FileOutputCommitter for path {} and context {}",
+            outputPath, context);
     return new FileOutputCommitter(outputPath, context);
   }
 
@@ -183,6 +205,13 @@ public class PathOutputCommitterFactory extends Configured {
           factory, key);
     }
     return ReflectionUtils.newInstance(factory, conf);
+  }
+
+  public static PathOutputCommitter createCommitter(Path outputPath,
+                                                    JobContext context) throws IOException {
+    return getCommitterFactory(outputPath,
+            context.getConfiguration())
+            .createOutputCommitter(outputPath, context);
   }
 
   /**
