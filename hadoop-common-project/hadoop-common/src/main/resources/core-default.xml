@@ -1431,7 +1431,6 @@
     org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider,
     software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider,
     org.apache.hadoop.fs.s3a.auth.IAMInstanceCredentialsProvider,
-    org.apache.hadoop.fs.s3a.ProfileAWSCredentialsProvider
   </value>
   <description>
     Comma-separated class names of credential provider classes which implement
@@ -1443,6 +1442,7 @@
     token binding it may be used
     to communicate wih the STS endpoint to request session/role
     credentials.
+    org.apache.hadoop.fs.s3a.auth.ProfileAWSCredentialsProvider is also supported, but is not enabled by default.
   </description>
 </property>
 
