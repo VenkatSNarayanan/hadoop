@@ -1430,7 +1430,7 @@
     org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider,
     org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider,
     software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider,
-    org.apache.hadoop.fs.s3a.auth.IAMInstanceCredentialsProvider,
+    org.apache.hadoop.fs.s3a.auth.IAMInstanceCredentialsProvider
   </value>
   <description>
     Comma-separated class names of credential provider classes which implement
