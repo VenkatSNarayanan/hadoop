@@ -84,8 +84,7 @@ public final class CredentialProviderListFactory {
           EnvironmentVariableCredentialsProvider.class,
           IAMInstanceCredentialsProvider.class,
           SimpleAWSCredentialsProvider.class,
-          TemporaryAWSCredentialsProvider.class,
-          ProfileAWSCredentialsProvider.class));
+          TemporaryAWSCredentialsProvider.class));
 
   /** V1 credential provider: {@value}. */
   public static final String ANONYMOUS_CREDENTIALS_V1 =
