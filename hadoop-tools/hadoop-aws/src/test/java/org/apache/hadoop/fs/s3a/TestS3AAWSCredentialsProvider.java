@@ -18,7 +18,11 @@
 
 package org.apache.hadoop.fs.s3a;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.InterruptedIOException;
+import java.io.IOException;
 import java.net.URI;
 import java.nio.file.AccessDeniedException;
 import java.util.ArrayList;
@@ -34,7 +38,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
-import org.apache.hadoop.fs.s3a.auth.*;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -47,6 +50,12 @@ import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvide
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.s3a.auth.AbstractSessionCredentialsProvider;
+import org.apache.hadoop.fs.s3a.auth.AssumedRoleCredentialProvider;
+import org.apache.hadoop.fs.s3a.auth.CredentialProviderListFactory;
+import org.apache.hadoop.fs.s3a.auth.IAMInstanceCredentialsProvider;
+import org.apache.hadoop.fs.s3a.auth.NoAuthWithAWSException;
+import org.apache.hadoop.fs.s3a.auth.ProfileAWSCredentialsProvider;
 import org.apache.hadoop.fs.s3a.auth.delegation.CountInvocationsProvider;
 import org.apache.hadoop.fs.s3a.impl.InstantiationIOException;
 import org.apache.hadoop.fs.s3a.test.PublicDatasetTestUtils;
@@ -138,7 +147,9 @@ public class TestS3AAWSCredentialsProvider extends AbstractS3ATestBase {
   public void testProfileAWSCredentialsProvider() throws Throwable {
     Configuration conf = new Configuration(false);
     conf.set(AWS_CREDENTIALS_PROVIDER, ProfileAWSCredentialsProvider.NAME);
-    try (FileWriter fileWriter = new FileWriter("testcred"); BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)) {
+    File tempFile = File.createTempFile("testcred", ".conf", new File("target"));
+    tempFile.deleteOnExit();
+    try (FileWriter fileWriter = new FileWriter(tempFile); BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)) {
       bufferedWriter.write("[default]\n"
       + "aws_access_key_id = defaultaccesskeyid\n"
       + "aws_secret_access_key = defaultsecretkeyid\n");
@@ -146,18 +157,18 @@ public class TestS3AAWSCredentialsProvider extends AbstractS3ATestBase {
               + "aws_access_key_id = nondefaultaccesskeyid\n"
               + "aws_secret_access_key = nondefaultsecretkeyid\n");
     }
-    conf.set(ProfileAWSCredentialsProvider.PROFILE_FILE, "testcred");
+    conf.set(ProfileAWSCredentialsProvider.PROFILE_FILE, tempFile.getAbsolutePath());
     URI testUri = new URI("s3a://bucket1");
     AWSCredentialProviderList list = createAWSCredentialProviderList(testUri, conf);
     assertCredentialProviders(Collections.singletonList(ProfileAWSCredentialsProvider.class), list);
     AwsCredentials credentials = list.resolveCredentials();
-    assertEquals("defaultaccesskeyid", credentials.accessKeyId());
-    assertEquals("defaultsecretkeyid", credentials.secretAccessKey());
+    Assertions.assertThat(credentials.accessKeyId()).isEqualTo("defaultaccesskeyid");
+    Assertions.assertThat(credentials.secretAccessKey()).isEqualTo("defaultsecretkeyid");
     conf.set(ProfileAWSCredentialsProvider.PROFILE_NAME, "nondefault");
     list = createAWSCredentialProviderList(testUri, conf);
     credentials = list.resolveCredentials();
-    assertEquals("nondefaultaccesskeyid", credentials.accessKeyId());
-    assertEquals("nondefaultsecretkeyid", credentials.secretAccessKey());
+    Assertions.assertThat(credentials.accessKeyId()).isEqualTo("nondefaultaccesskeyid");
+    Assertions.assertThat(credentials.secretAccessKey()).isEqualTo("nondefaultsecretkeyid");
   }
 
   @Test
